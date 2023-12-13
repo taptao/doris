@@ -484,6 +484,18 @@ LIBDEFLATE_NAME=libdeflate-1.19.tar.gz
 LIBDEFLATE_SOURCE=libdeflate-1.19
 LIBDEFLATE_MD5SUM="c69e9193d2975a729068ffa862c81fb6"
 
+# wasmtime
+WASMTIME_DOWNLOAD="https://github.com/bytecodealliance/wasmtime/releases/download/v14.0.4/wasmtime-v14.0.4-src.tar.gz"
+WASMTIME_NAME=wasmtime-v14.0.4-src.tar.gz
+WASMTIME_SOURCE=wasmtime-v14.0.4-src
+WASMTIME_MD5SUM="b440d7efd615f1b018cd326876d8ead7"
+
+# wasmtime-cpp
+WASMTIME_CPP_DOWNLOAD="https://github.com/bytecodealliance/wasmtime-cpp/archive/refs/tags/v9.0.0.tar.gz"
+WASMTIME_CPP_NAME=v9.0.0.tar.gz
+WASMTIME_CPP_SOURCE=wasmtime-cpp-9.0.0
+WASMTIME_CPP_MD5SUM="222cda259440a4243104571900fe087a"
+
 # all thirdparties which need to be downloaded is set in array TP_ARCHIVES
 export TP_ARCHIVES=(
     'LIBEVENT'
@@ -555,6 +567,8 @@ export TP_ARCHIVES=(
     'DRAGONBOX'
     'AVX2NEON'
     'LIBDEFLATE'
+    'WASMTIME'
+    'WASMTIME_CPP'
 )
 
 if [[ "$(uname -s)" == 'Darwin' ]]; then
