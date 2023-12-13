@@ -313,7 +313,7 @@ enum TFunctionBinaryType {
 
   AGG_STATE,
 
-  ASAM_UDF,
+  WASM_UDF,
 }
 
 // Represents a fully qualified function name.
