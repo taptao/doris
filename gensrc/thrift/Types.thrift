@@ -311,7 +311,9 @@ enum TFunctionBinaryType {
 
   JAVA_UDF,
 
-  AGG_STATE
+  AGG_STATE,
+
+  ASAM_UDF,
 }
 
 // Represents a fully qualified function name.
