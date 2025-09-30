@@ -113,13 +113,60 @@ The storage-compute integrated architecture of Apache Doris is streamlined and e
 
 <br />
 
+#### Frontend (FE) Architecture
+
+The Frontend is the control center of Apache Doris, consisting of several key components:
+
+- **Query Coordinator**: Receives client SQL queries, performs syntax analysis, semantic analysis, and generates execution plans. It uses both CBO (Cost-Based Optimizer) and RBO (Rule-Based Optimizer) to produce optimal query plans.
+
+- **Metadata Management**: Maintains all cluster metadata including database schemas, table structures, partition information, and replica distribution. Metadata is persisted using BDB JE (Berkeley DB Java Edition) with high availability guarantees.
+
+- **Cluster Management**: Monitors the health status of all BE nodes through heartbeat mechanisms, manages node additions and removals, and coordinates data replica distribution and balancing.
+
+- **Load Coordinator**: Manages data import tasks, including stream load, broker load, and routine load, ensuring data consistency and transaction atomicity.
+
+#### Backend (BE) Architecture
+
+The Backend handles actual data storage and query execution:
+
+- **Storage Layer**: Uses a columnar storage format optimized for analytical queries. Data is organized in tablets (the basic unit of data management) with support for multiple storage engines and compression algorithms.
+
+- **Execution Engine**: A vectorized MPP (Massively Parallel Processing) execution engine that processes queries in parallel across multiple nodes. Features include:
+  - Vectorized execution for SIMD optimization
+  - Pipeline execution model for better CPU utilization
+  - Runtime filters for dynamic query optimization
+  - Adaptive query execution based on runtime statistics
+
+- **Compaction Engine**: Automatically merges data files in the background to optimize storage space and query performance.
+
+- **Replica Management**: Handles data replication and consistency. Each tablet is replicated across multiple BE nodes, using a quorum-based protocol to ensure data consistency.
+
+#### High Availability Architecture
+
 In a production environment, multiple FE nodes can be deployed for disaster recovery. Each FE node maintains a full copy of the metadata. The FE nodes are divided into three roles:
 
 | Role      | Function                                                     |
 | --------- | ------------------------------------------------------------ |
-| Master    | The FE Master node is responsible for metadata read and write operations. When metadata changes occur in the Master, they are synchronized to Follower or Observer nodes via the BDB JE protocol. |
-| Follower  | The Follower node is responsible for reading metadata. If the Master node fails, a Follower node can be selected as the new Master. |
-| Observer  | The Observer node is responsible for reading metadata and is mainly used to increase query concurrency. It does not participate in cluster leadership elections. |
+| Master    | The FE Master node is responsible for metadata read and write operations. When metadata changes occur in the Master, they are synchronized to Follower or Observer nodes via the BDB JE protocol. Only the Master can write metadata, ensuring strong consistency. |
+| Follower  | The Follower node is responsible for reading metadata and participates in leader election. If the Master node fails, a Follower node can be elected as the new Master through the BDBJE election mechanism, ensuring service continuity. |
+| Observer  | The Observer node is responsible for reading metadata and is mainly used to increase query concurrency. It does not participate in cluster leadership elections but receives metadata updates from the Master to stay synchronized. |
+
+#### Data Distribution and Replication
+
+- **Partitioning**: Tables can be partitioned using range, list, or hash partitioning strategies to distribute data across the cluster.
+
+- **Bucketing**: Within each partition, data is further divided into buckets (tablets) based on a hash algorithm for parallel processing.
+
+- **Replication**: Each tablet has multiple replicas (typically 3) distributed across different BE nodes. Write operations succeed when a quorum of replicas (majority) have confirmed the write, ensuring both availability and consistency.
+
+#### Query Execution Flow
+
+1. **Client Connection**: Client connects to any FE node using MySQL protocol
+2. **Query Parsing**: FE parses and validates the SQL query
+3. **Plan Generation**: FE generates an optimized distributed execution plan
+4. **Plan Distribution**: FE distributes query fragments to relevant BE nodes
+5. **Parallel Execution**: BE nodes execute query fragments in parallel, with data shuffling as needed
+6. **Result Aggregation**: Results are aggregated and returned to the client through FE
 
 Both FE and BE processes are horizontally scalable, enabling a single cluster to support hundreds of machines and tens of petabytes of storage capacity. The FE and BE processes use a consistency protocol to ensure high availability of services and high reliability of data. The storage-compute integrated architecture is highly integrated, significantly reducing the operational complexity of distributed systems.
 
